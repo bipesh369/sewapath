@@ -3,7 +3,9 @@ import app from "./app.js";
 import connectDB from "./config/db.js";
 import serviceRouters from "./routes/service.routes.js"
 
-dotenv.config();
+dotenv.config({
+  PAATH: "../.env",
+});
 
 const PORT = process.env.PORT || 5000;
 
