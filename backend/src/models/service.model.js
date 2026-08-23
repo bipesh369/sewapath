@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const serviceSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
     },
@@ -15,8 +15,24 @@ const serviceSchema = new mongoose.Schema(
 
     description: {
       type: String,
+      required: true,
     },
-  },
+
+    fee: {
+      type: Number,
+    },
+
+    processingTime: {
+      type: String,
+      required: true,
+    },
+
+    deliveryMode: {
+      type: String,
+      required: true,
+    }
+},
+
   {
     timestamps: true,
   }
