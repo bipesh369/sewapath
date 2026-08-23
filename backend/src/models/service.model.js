@@ -20,6 +20,7 @@ const serviceSchema = new mongoose.Schema(
 
     fee: {
       type: Number,
+      min: 0,
     },
 
     processingTime: {
@@ -30,6 +31,8 @@ const serviceSchema = new mongoose.Schema(
     deliveryMode: {
       type: String,
       required: true,
+      enum: ["In-person", "Online", "Online & Offline"],
+      trim: true,
     }
 },
 

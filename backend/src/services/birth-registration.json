@@ -1,0 +1,8 @@
+{
+  "title": "Birth Registration",
+  "slug": "birth-registration",
+  "description": "Registration of a child's birth with the local registrar and issuance of the birth registration certificate.",
+  "fee": 0,
+  "processingTime": "Upon registration",
+  "deliveryMode": "In-person"
+}
