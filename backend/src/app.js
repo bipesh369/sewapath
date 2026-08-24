@@ -3,6 +3,7 @@ import cors from "cors";
 import serviceRoutes from "./routes/service.routes.js"
 import errorHandler from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js"
+import documentRequirementRoutes from "./routes/documentRequirement.routes.js"
 
 const app = express();
 
@@ -28,5 +29,9 @@ app.use("/api/auth", authRoutes);
 
 // Global error handler
 app.use(errorHandler)
+
+app.use("/api", documentRequirementRoutes)
+
+
 
 export default app;
