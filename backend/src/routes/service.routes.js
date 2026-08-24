@@ -14,4 +14,9 @@ router
     serviceController.createService
   );
 
+router
+   .route("/:id")
+   .get(serviceController.getServiceById)
+  
+
 export default router;
