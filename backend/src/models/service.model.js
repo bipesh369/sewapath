@@ -5,37 +5,65 @@ const serviceSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     slug: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
 
     description: {
       type: String,
       required: true,
+      trim: true,
     },
+
+    category: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    eligibility: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    requiredDocuments: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
     fee: {
       type: Number,
+      required: true,
       min: 0,
     },
 
     processingTime: {
       type: String,
       required: true,
+      trim: true,
     },
 
     deliveryMode: {
       type: String,
       required: true,
-      enum: ["In-person", "Online", "Online & Offline"],
       trim: true,
-    }
-},
+    },
 
+    officialUrl: {
+      type: String,
+      trim: true,
+    },
+  },
   {
     timestamps: true,
   }
@@ -43,4 +71,4 @@ const serviceSchema = new mongoose.Schema(
 
 const Service = mongoose.model("Service", serviceSchema);
 
-export default Service
+export default Service;
