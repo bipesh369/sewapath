@@ -34,13 +34,6 @@ const serviceSchema = new mongoose.Schema(
       trim: true,
     },
 
-    requiredDocuments: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-
     fee: {
       type: Number,
       required: true,

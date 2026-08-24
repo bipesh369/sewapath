@@ -1,6 +1,7 @@
 import Service from "../models/service.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/apiError.js";
+import DocumentRequirement from "../models/documentRequirement.model.js";
 
 
 const getServices = asyncHandler(async (req, res)=> {
@@ -32,10 +33,18 @@ const getServiceById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Service not found");
   }
 
+
+  const requireDocuments = await DocumentRequirement.find({
+    serviceId: service._id,
+  }).sort({ order: 1 });
+
   res.status(200).json({
     success: true,
     message: "Service fetched successfully",
-    data: service,
+    data: {
+      ...service.toObject(),
+      requireDocuments,
+    },
   });
 });
 
