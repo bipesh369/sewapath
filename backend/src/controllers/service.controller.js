@@ -4,7 +4,9 @@ import ApiError from "../utils/apiError.js";
 
 
 const getServices = asyncHandler(async (req, res)=> {
-    const services = await Service.find()
+    const services = await Service.find({
+      status: "published",
+    })
 
     res.status(200).json({
       success: true,

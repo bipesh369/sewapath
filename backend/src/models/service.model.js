@@ -63,7 +63,14 @@ const serviceSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    status: {
+  type: String,
+  enum: ["draft", "published", "archived"],
+  default: "draft",
   },
+},
+
   {
     timestamps: true,
   }
