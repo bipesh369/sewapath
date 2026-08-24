@@ -17,6 +17,29 @@ router
 router
    .route("/:id")
    .get(serviceController.getServiceById)
+
+router
+  .route("/:id")
+  .get(serviceController.getServiceById)
+  .patch(
+    protect,
+    authorize("admin"),
+    serviceController.updateService
+  );
+  
+  router
+  .route("/:id")
+  .get(serviceController.getServiceById)
+  .patch(
+    protect,
+    authorize("admin"),
+    serviceController.updateService
+  )
+  .delete(
+    protect,
+    authorize("admin"),
+    serviceController.deleteService
+  );
   
 
 export default router;

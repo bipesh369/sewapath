@@ -37,9 +37,46 @@ const getServiceById = asyncHandler(async (req, res) => {
   });
 });
 
+const updateService = asyncHandler(async (req, res) => {
+  const service = await Service.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!service) {
+    throw new ApiError(404, "Service not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Service updated successfully",
+    data: service,
+  });
+});
+
+const deleteService = asyncHandler(async (req, res) => {
+  const service = await Service.findByIdAndDelete(req.params.id);
+
+  if (!service) {
+    throw new ApiError(404, "Service not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Service deleted successfully",
+    data: service,
+  });
+});
+
 
 export default {
   getServices,
   createService,
   getServiceById,
+  updateService,
+  deleteService,
 }
