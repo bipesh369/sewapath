@@ -1,10 +1,14 @@
 import { Router } from "express";
+
 import serviceController from "../controllers/service.controller.js";
+
 import protect from "../middleware/auth.middleware.js";
+
 import authorize from "../middleware/authorize.middleware.js";
+
 const router = Router();
 
-
+// Service collection
 router
   .route("/")
   .get(serviceController.getServices)
@@ -14,20 +18,8 @@ router
     serviceController.createService
   );
 
+// Single service
 router
-   .route("/:id")
-   .get(serviceController.getServiceById)
-
-router
-  .route("/:id")
-  .get(serviceController.getServiceById)
-  .patch(
-    protect,
-    authorize("admin"),
-    serviceController.updateService
-  );
-  
-  router
   .route("/:id")
   .get(serviceController.getServiceById)
   .patch(
@@ -40,6 +32,5 @@ router
     authorize("admin"),
     serviceController.deleteService
   );
-  
 
 export default router;

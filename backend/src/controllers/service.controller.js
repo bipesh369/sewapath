@@ -12,7 +12,7 @@ const getServices = asyncHandler(async (req, res)=> {
     res.status(200).json({
       success: true,
       message: "Services fetched successfully",
-      data: services
+      data: services,
     });
   }); 
 
