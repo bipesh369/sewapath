@@ -10,7 +10,20 @@ const getServices = asyncHandler(async (req, res)=> {
       message: "Services fetched successfully",
       data: services
     });
-  });; 
+  }); 
+
+  const createService = asyncHandler(async (req, res) => {
+  const service = await Service.create(req.body);
+
+  res.status(201).json({
+    success: true,
+    message: "Service created successfully",
+    data: service,
+  });
+});
 
 
-export default getServices
+export default {
+  getServices,
+  createService,
+}
