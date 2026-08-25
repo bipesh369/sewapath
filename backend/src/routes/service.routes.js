@@ -1,9 +1,6 @@
 import { Router } from "express";
-
 import serviceController from "../controllers/service.controller.js";
-
 import protect from "../middleware/auth.middleware.js";
-
 import authorize from "../middleware/authorize.middleware.js";
 
 const router = Router();
