@@ -28,11 +28,11 @@ const serviceSchema = new mongoose.Schema(
       trim: true,
     },
 
-    eligibility: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    // eligibility: {
+    //   type: String,
+    //   required: true,
+    //   trim: true,
+    // },
 
     fee: {
       type: Number,

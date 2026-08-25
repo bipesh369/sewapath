@@ -4,6 +4,8 @@ import serviceRoutes from "./routes/service.routes.js"
 import errorHandler from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js"
 import documentRequirementRoutes from "./routes/documentRequirement.routes.js"
+import eligibilityQuestionRoutes from "./routes/eligibilityQuestion.routes.js"
+
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use("/api/auth", authRoutes);
 app.use(errorHandler)
 
 app.use("/api", documentRequirementRoutes)
+
+app.use("/api", eligibilityQuestionRoutes)
 
 
 

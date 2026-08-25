@@ -34,7 +34,7 @@ const getServiceById = asyncHandler(async (req, res) => {
   }
 
 
-  const requireDocuments = await DocumentRequirement.find({
+  const requiredDocuments = await DocumentRequirement.find({
     serviceId: service._id,
   }).sort({ order: 1 });
 
@@ -43,7 +43,7 @@ const getServiceById = asyncHandler(async (req, res) => {
     message: "Service fetched successfully",
     data: {
       ...service.toObject(),
-      requireDocuments,
+      requiredDocuments,
     },
   });
 });
