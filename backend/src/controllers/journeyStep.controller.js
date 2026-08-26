@@ -49,7 +49,9 @@ const getJourneySteps = asyncHandler(async (req, res) => {
 
   const journeySteps = await JourneyStep.find({
     serviceId,
-  }).sort({ order: 1 });
+  })
+  .populate("responsibleOffice")
+  .sort({ order: 1 })
 
   res.status(200).json({
     success: true,
