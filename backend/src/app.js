@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js"
 import documentRequirementRoutes from "./routes/documentRequirement.routes.js"
 import eligibilityQuestionRoutes from "./routes/eligibilityQuestion.routes.js"
 import journeyStepRoutes from "./routes/journeyStep.routes.js"
+import officeRoutes from "./routes/office.routes.js"
 
 
 const app = express();
@@ -38,6 +39,8 @@ app.use("/api", documentRequirementRoutes)
 app.use("/api", eligibilityQuestionRoutes)
 
 app.use("/api", journeyStepRoutes);
+
+app.use("/api/offices", officeRoutes)
 
 
 
