@@ -27,7 +27,10 @@ const getServices = asyncHandler(async (req, res)=> {
 });
 
 const getServiceById = asyncHandler(async (req, res) => {
-  const service = await Service.findById(req.params.id);
+  const service = await Service.findOne({
+    _id: req.params.id,
+    status: "published",
+  });
 
   if (!service) {
     throw new ApiError(404, "Service not found");

@@ -9,6 +9,7 @@ import journeyStepRoutes from "./routes/journeyStep.routes.js"
 import officeRoutes from "./routes/office.routes.js"
 
 
+
 const app = express();
 
 app.use(
@@ -38,9 +39,11 @@ app.use("/api", documentRequirementRoutes)
 
 app.use("/api", eligibilityQuestionRoutes)
 
-app.use("/api", journeyStepRoutes);
+app.use("/api", journeyStepRoutes)
 
 app.use("/api/offices", officeRoutes)
+
+app.use("/api/documents", documentRequirementRoutes)
 
 
 

@@ -1,28 +1,20 @@
 import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/apiError.js";
 import DocumentRequirement from "../models/documentRequirement.model.js";
 import Service from "../models/service.model.js";
 
-// Add a document requirement to a service
 const createDocumentRequirement = asyncHandler(async (req, res) => {
   const { serviceId } = req.params;
-  const { label, mandatory, notes, order } = req.body;
 
-  // Check whether the service exists
   const service = await Service.findById(serviceId);
 
   if (!service) {
-    return res.status(404).json({
-      success: false,
-      message: "Service not found",
-    });
+    throw new ApiError(404, "Service not found");
   }
 
   const document = await DocumentRequirement.create({
     serviceId,
-    label,
-    mandatory,
-    notes,
-    order,
+    ...req.body,
   });
 
   res.status(201).json({
@@ -32,9 +24,14 @@ const createDocumentRequirement = asyncHandler(async (req, res) => {
   });
 });
 
-// Get all document requirements for a service
 const getDocumentRequirements = asyncHandler(async (req, res) => {
   const { serviceId } = req.params;
+
+  const service = await Service.findById(serviceId);
+
+  if (!service) {
+    throw new ApiError(404, "Service not found");
+  }
 
   const documents = await DocumentRequirement.find({
     serviceId,
@@ -47,7 +44,46 @@ const getDocumentRequirements = asyncHandler(async (req, res) => {
   });
 });
 
+const updateDocumentRequirement = asyncHandler(async (req, res) => {
+  const document = await DocumentRequirement.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!document) {
+    throw new ApiError(404, "Document requirement not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Document requirement updated successfully",
+    data: document,
+  });
+});
+
+const deleteDocumentRequirement = asyncHandler(async (req, res) => {
+  const document = await DocumentRequirement.findByIdAndDelete(
+    req.params.id
+  );
+
+  if (!document) {
+    throw new ApiError(404, "Document requirement not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Document requirement deleted successfully",
+    data: document,
+  });
+});
+
 export default {
   createDocumentRequirement,
   getDocumentRequirements,
+  updateDocumentRequirement,
+  deleteDocumentRequirement,
 };
