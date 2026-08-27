@@ -7,6 +7,7 @@ import documentRequirementRoutes from "./routes/documentRequirement.routes.js"
 import eligibilityQuestionRoutes from "./routes/eligibilityQuestion.routes.js"
 import journeyStepRoutes from "./routes/journeyStep.routes.js"
 import officeRoutes from "./routes/office.routes.js"
+import savedServiceRoutes from "./routes/savedService.routes.js";
 
 
 
@@ -44,6 +45,8 @@ app.use("/api", journeyStepRoutes)
 app.use("/api/offices", officeRoutes)
 
 app.use("/api/documents", documentRequirementRoutes)
+
+app.use("/api/saved-services", savedServiceRoutes);
 
 
 
