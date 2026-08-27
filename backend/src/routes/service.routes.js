@@ -15,6 +15,8 @@ router
     serviceController.createService
   );
 
+  router.post("/match", serviceController.matchServices);
+
 // Single service
 router
   .route("/:id")

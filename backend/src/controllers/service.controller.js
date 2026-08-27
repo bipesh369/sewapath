@@ -124,10 +124,60 @@ const deleteService = asyncHandler(async (req, res) => {
   });
 });
 
+const matchServices = asyncHandler(async (req, res) => {
+  const { goalText } = req.body;
+
+  if (!goalText || !goalText.trim()) {
+    throw new ApiError(400, "goalText is required");
+  }
+
+  const services = await Service.find({
+    status: "published",
+  });
+
+  const keywords = goalText
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length > 2);
+
+  const matches = services
+    .map((service) => {
+      const searchableText = `
+        ${service.title}
+        ${service.slug}
+        ${service.description}
+        ${service.category}
+      `.toLowerCase();
+
+      let score = 0;
+
+      keywords.forEach((keyword) => {
+        if (searchableText.includes(keyword)) {
+          score += 1;
+        }
+      });
+
+      return {
+        service,
+        score,
+      };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  res.status(200).json({
+    success: true,
+    message: "Services matched successfully",
+    data: matches,
+  });
+});
+
+
 export default {
   getServices,
   createService,
   getServiceById,
   updateService,
   deleteService,
+  matchServices,
 };
