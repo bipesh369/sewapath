@@ -51,6 +51,13 @@ app.use("/api/saved-services", savedServiceRoutes)
 
 app.use("/api/notifications", notificationRoutes)
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "SewaPath API is running",
+  });
+});
+
 
 
 export default app;

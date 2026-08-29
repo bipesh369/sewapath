@@ -2,6 +2,10 @@ import express from "express";
 import authController from "../controllers/auth.controller.js";
 import protect from "../middleware/auth.middleware.js";
 import authorize from "../middleware/authorize.middleware.js";
+import validate from "../utils/validation.js";
+import registerSchem from "../validations/auth.validation.js";
+import loginSchema from "../validations/auth.validation.js"
+
 
 const router = express.Router();
 
@@ -26,5 +30,18 @@ router.get(
     });
   }
 );
+
+router.post(
+  "/register",
+  validate(registerSchem.registerSchema),
+  authController.registerUser
+);
+
+router.post(
+  "/login",
+  validate(loginSchema.loginSchema),
+  authController.loginUser
+);
+
 
 export default router;
