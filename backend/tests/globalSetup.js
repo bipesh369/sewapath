@@ -1,10 +1,9 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { beforeAll, afterAll } from "vitest";
 
-dotenv.config();
+export async function setup() {
+  dotenv.config();
 
-beforeAll(async () => {
   if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI is not defined");
   }
@@ -14,10 +13,10 @@ beforeAll(async () => {
   });
 
   console.log("[test] MongoDB connected");
-});
+}
 
-afterAll(async () => {
+export async function teardown() {
   await mongoose.disconnect();
 
   console.log("[test] MongoDB disconnected");
-});
+}
