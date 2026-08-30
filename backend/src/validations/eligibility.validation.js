@@ -28,11 +28,7 @@ const eligibilityOptionSchema = z.object({
     .optional(),
 });
 
-export const createEligibilityQuestionSchema = z.object({
-  serviceId: z
-    .string()
-    .min(1, "Service ID is required"),
-
+const createEligibilityQuestionSchema = z.object({
   order: z
     .number()
     .int()
@@ -79,7 +75,6 @@ const evaluateEligibilitySchema = z.object({
     )
     .min(1, "At least one answer is required"),
 });
-
 
 export default {
   createEligibilityQuestionSchema,

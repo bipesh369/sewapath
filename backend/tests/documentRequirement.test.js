@@ -3,21 +3,37 @@ import request from "supertest";
 
 import app from "../src/app.js";
 
+import {
+  createTestUser,
+  createTestService,
+} from "./helpers/testData.js";
+
+import { loginTestUser } from "./helpers/auth.js";
+
 describe("Document Requirement API", () => {
-  it("should not allow a citizen to create a document requirement", async () => {
-    const loginResponse = await request(app)
-      .post("/api/auth/login")
-      .send({
-        email: "citizen-test@example.com",
-        password: "123456",
-      });
-
-    expect(loginResponse.status).toBe(200);
-
-    const token = loginResponse.body.data.token;
+  it("should allow public users to get document requirements", async () => {
+    const service = await createTestService();
 
     const response = await request(app)
-      .post("/api/services/6a93e83aa26b25f169a5fba1/documents")
+      .get(`/api/services/${service._id}/documents`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toBeInstanceOf(Array);
+  });
+
+  it("should not allow a citizen to create a document requirement", async () => {
+    const service = await createTestService();
+
+    const citizen = await createTestUser();
+
+    const token = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
+    });
+
+    const response = await request(app)
+      .post(`/api/services/${service._id}/documents`)
       .set("Authorization", `Bearer ${token}`)
       .send({
         label: {
@@ -34,54 +50,91 @@ describe("Document Requirement API", () => {
 
     expect(response.status).toBe(403);
   });
-});
 
-it("should allow public users to get document requirements", async () => {
-  const response = await request(app)
-    .get("/api/services/6a93e83aa26b25f169a5fba1/documents");
+  it("should not allow a citizen to update a document requirement", async () => {
+    const service = await createTestService();
 
-  expect(response.status).toBe(200);
-  expect(response.body.success).toBe(true);
-  expect(response.body.data).toBeInstanceOf(Array);
-});
-
-it("should not allow a citizen to update a document requirement", async () => {
-  const loginResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "citizen-test@example.com",
-      password: "123456",
+    const admin = await createTestUser({
+      role: "admin",
     });
 
-  expect(loginResponse.status).toBe(200);
-
-  const token = loginResponse.body.data.token;
-
-  const response = await request(app)
-    .patch("/api/documents/6a8aa1d127d7f9db63cc3a94")
-    .set("Authorization", `Bearer ${token}`)
-    .send({
-      mandatory: false,
+    const adminToken = await loginTestUser({
+      email: admin.email,
+      password: admin.password,
     });
 
-  expect(response.status).toBe(403);
-});
+    const createResponse = await request(app)
+      .post(`/api/services/${service._id}/documents`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        label: {
+          en: "Citizenship Certificate",
+          ne: "नागरिकता प्रमाणपत्र",
+        },
+        mandatory: true,
+        order: 1,
+      });
 
-it("should not allow a citizen to delete a document requirement", async () => {
-  const loginResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "citizen-test@example.com",
-      password: "123456",
+    expect(createResponse.status).toBe(201);
+
+    const documentId = createResponse.body.data._id;
+
+    const citizen = await createTestUser();
+
+    const citizenToken = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
     });
 
-  expect(loginResponse.status).toBe(200);
+    const response = await request(app)
+      .patch(`/api/documents/${documentId}`)
+      .set("Authorization", `Bearer ${citizenToken}`)
+      .send({
+        mandatory: false,
+      });
 
-  const token = loginResponse.body.data.token;
+    expect(response.status).toBe(403);
+  });
 
-  const response = await request(app)
-    .delete("/api/documents/6a8aa1d127d7f9db63cc3a94")
-    .set("Authorization", `Bearer ${token}`);
+  it("should not allow a citizen to delete a document requirement", async () => {
+    const service = await createTestService();
 
-  expect(response.status).toBe(403);
+    const admin = await createTestUser({
+      role: "admin",
+    });
+
+    const adminToken = await loginTestUser({
+      email: admin.email,
+      password: admin.password,
+    });
+
+    const createResponse = await request(app)
+      .post(`/api/services/${service._id}/documents`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        label: {
+          en: "Citizenship Certificate",
+          ne: "नागरिकता प्रमाणपत्र",
+        },
+        mandatory: true,
+        order: 1,
+      });
+
+    expect(createResponse.status).toBe(201);
+
+    const documentId = createResponse.body.data._id;
+
+    const citizen = await createTestUser();
+
+    const citizenToken = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
+    });
+
+    const response = await request(app)
+      .delete(`/api/documents/${documentId}`)
+      .set("Authorization", `Bearer ${citizenToken}`);
+
+    expect(response.status).toBe(403);
+  });
 });

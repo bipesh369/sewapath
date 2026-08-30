@@ -3,16 +3,23 @@ import request from "supertest";
 
 import app from "../src/app.js";
 
+import {
+  createTestUser,
+  createTestService,
+} from "./helpers/testData.js";
+
+import { loginTestUser } from "./helpers/auth.js";
+
 describe("Service API", () => {
   it("should return only published services", async () => {
+    await createTestService({ status: "published" });
+    await createTestService({ status: "draft" });
+
     const response = await request(app)
       .get("/api/services");
 
     expect(response.status).toBe(200);
-
     expect(response.body.success).toBe(true);
-
-    expect(response.body.data).toBeInstanceOf(Array);
 
     response.body.data.forEach((service) => {
       expect(service.status).toBe("published");
@@ -23,9 +30,9 @@ describe("Service API", () => {
     const response = await request(app)
       .post("/api/services")
       .send({
-        title: "Test Service",
-        slug: "test-service",
-        description: "This is a test service description.",
+        title: "Unauthorized Service",
+        slug: `unauthorized-${Date.now()}`,
+        description: "This should not be created.",
         category: "Test",
         fee: 0,
         processingTime: "1 day",
@@ -34,65 +41,56 @@ describe("Service API", () => {
 
     expect(response.status).toBe(401);
   });
-});
 
-it("should not allow a citizen to create a service", async () => {
-  const loginResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "citizen-test@example.com",
-      password: "123456",
+  it("should not allow a citizen to create a service", async () => {
+    const citizen = await createTestUser();
+
+    const token = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
     });
 
-  expect(loginResponse.status).toBe(200);
+    const response = await request(app)
+      .post("/api/services")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        title: "Citizen Service",
+        slug: `citizen-service-${Date.now()}`,
+        description: "This should not be created.",
+        category: "Test",
+        fee: 0,
+        processingTime: "1 day",
+        deliveryMode: "Online",
+      });
 
-  const token = loginResponse.body.data.token;
+    expect(response.status).toBe(403);
+  });
 
-  const response = await request(app)
-    .post("/api/services")
-    .set("Authorization", `Bearer ${token}`)
-    .send({
-      title: "Unauthorized Service",
-      slug: "unauthorized-service",
-      description: "This service should not be created.",
-      category: "Test",
-      fee: 0,
-      processingTime: "1 day",
-      deliveryMode: "Online",
+  it("should allow an admin to create a service", async () => {
+    const admin = await createTestUser({
+      role: "admin",
     });
 
-  expect(response.status).toBe(403);
-});
-
-
-it("should allow an admin to create a service", async () => {
-  const loginResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "testadmin@example.com",
-      password: "123456",
+    const token = await loginTestUser({
+      email: admin.email,
+      password: admin.password,
     });
 
-  expect(loginResponse.status).toBe(200);
+    const response = await request(app)
+      .post("/api/services")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        title: "Admin Test Service",
+        slug: `admin-test-${Date.now()}`,
+        description: "Created by an admin test.",
+        category: "Test",
+        fee: 0,
+        processingTime: "1 day",
+        deliveryMode: "Online",
+      });
 
-  const token = loginResponse.body.data.token;
-
-  const response = await request(app)
-    .post("/api/services")
-    .set("Authorization", `Bearer ${token}`)
-    .send({
-      title: "Automated Test Service",
-      slug: `automated-test-service-${Date.now()}`,
-      description: "This service is created by an automated test.",
-      category: "Test",
-      fee: 0,
-      processingTime: "1 day",
-      deliveryMode: "Online",
-    });
-
-  expect(response.status).toBe(201);
-
-  expect(response.body.success).toBe(true);
-
-  expect(response.body.data.status).toBe("draft");
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.status).toBe("draft");
+  });
 });

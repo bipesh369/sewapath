@@ -1,10 +1,6 @@
 import { z } from "zod";
 
 export const createJourneyStepSchema = z.object({
-  serviceId: z
-    .string()
-    .min(1, "Service ID is required"),
-
   order: z
     .number()
     .int()
@@ -36,22 +32,26 @@ export const createJourneyStepSchema = z.object({
 
   responsibleOffice: z
     .string()
+    .trim()
     .min(1, "Responsible office ID is required")
     .nullable()
     .optional(),
 
-  estimatedTime: z.object({
-    en: z
-      .string()
-      .trim()
-      .optional(),
+  estimatedTime: z
+    .object({
+      en: z
+        .string()
+        .trim()
+        .optional(),
 
-    ne: z
-      .string()
-      .trim()
-      .optional(),
-  }).optional(),
+      ne: z
+        .string()
+        .trim()
+        .optional(),
+    })
+    .optional(),
 });
 
 export const updateJourneyStepSchema =
   createJourneyStepSchema.partial();
+

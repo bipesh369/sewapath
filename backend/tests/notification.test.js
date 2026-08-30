@@ -2,8 +2,12 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 
 import app from "../src/app.js";
+
 import User from "../src/models/user.model.js";
 import Notification from "../src/models/notification.model.js";
+
+import { createTestUser } from "./helpers/testData.js";
+import { loginTestUser } from "./helpers/auth.js";
 
 describe("Notification API", () => {
   it("should require authentication to get notifications", async () => {
@@ -14,29 +18,19 @@ describe("Notification API", () => {
   });
 
   it("should return notifications belonging to the authenticated user", async () => {
-    const user = await User.findOne({
-      email: "citizen-test@example.com",
-    });
+    const citizen = await createTestUser();
 
-    expect(user).toBeDefined();
-
-    await Notification.create({
-      userId: user._id,
+    const notification = await Notification.create({
+      userId: citizen.user._id,
       type: "service",
       title: "Test Notification",
       message: "This is a test notification.",
     });
 
-    const loginResponse = await request(app)
-      .post("/api/auth/login")
-      .send({
-        email: "citizen-test@example.com",
-        password: "123456",
-      });
-
-    expect(loginResponse.status).toBe(200);
-
-    const token = loginResponse.body.data.token;
+    const token = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
+    });
 
     const response = await request(app)
       .get("/api/notifications")
@@ -44,47 +38,35 @@ describe("Notification API", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data).toBeInstanceOf(Array);
 
     expect(
       response.body.data.some(
-        (notification) =>
-          notification.title === "Test Notification"
+        (item) => item._id === notification._id.toString()
       )
     ).toBe(true);
   });
-});
 
-it("should allow a user to mark their own notification as read", async () => {
-  const user = await User.findOne({
-    email: "citizen-test@example.com",
-  });
+  it("should allow a user to mark their own notification as read", async () => {
+    const citizen = await createTestUser();
 
-  expect(user).toBeDefined();
-
-  const notification = await Notification.create({
-    userId: user._id,
-    type: "service",
-    title: "Unread Notification",
-    message: "Please mark this as read.",
-  });
-
-  const loginResponse = await request(app)
-    .post("/api/auth/login")
-    .send({
-      email: "citizen-test@example.com",
-      password: "123456",
+    const notification = await Notification.create({
+      userId: citizen.user._id,
+      type: "service",
+      title: "Unread Notification",
+      message: "Please mark this as read.",
     });
 
-  expect(loginResponse.status).toBe(200);
+    const token = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
+    });
 
-  const token = loginResponse.body.data.token;
+    const response = await request(app)
+      .patch(`/api/notifications/${notification._id}/read`)
+      .set("Authorization", `Bearer ${token}`);
 
-  const response = await request(app)
-    .patch(`/api/notifications/${notification._id}/read`)
-    .set("Authorization", `Bearer ${token}`);
-
-  expect(response.status).toBe(200);
-  expect(response.body.success).toBe(true);
-  expect(response.body.data.read).toBe(true);
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.read).toBe(true);
+  });
 });

@@ -3,10 +3,19 @@ import request from "supertest";
 
 import app from "../src/app.js";
 
+import {
+  createTestUser,
+  createTestService,
+} from "./helpers/testData.js";
+
+import { loginTestUser } from "./helpers/auth.js";
+
 describe("Eligibility API", () => {
   it("should allow public users to get eligibility questions", async () => {
+    const service = await createTestService();
+
     const response = await request(app)
-      .get("/api/services/6a8aa1d127d7f9db63cc3a94/eligibility");
+      .get(`/api/services/${service._id}/eligibility`);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -14,63 +23,91 @@ describe("Eligibility API", () => {
   });
 
   it("should not allow a citizen to create an eligibility question", async () => {
-    const loginResponse = await request(app)
-      .post("/api/auth/login")
-      .send({
-        email: "citizen-test@example.com",
-        password: "123456",
-      });
+    const service = await createTestService();
 
-    expect(loginResponse.status).toBe(200);
+    const citizen = await createTestUser();
 
-    const token = loginResponse.body.data.token;
+    const token = await loginTestUser({
+      email: citizen.email,
+      password: citizen.password,
+    });
 
     const response = await request(app)
-      .post("/api/services/6a8aa1d127d7f9db63cc3a94/eligibility")
+      .post(`/api/services/${service._id}/eligibility`)
       .set("Authorization", `Bearer ${token}`)
       .send({
-        order: 99,
+        order: 1,
         questionText: {
-          en: "Test question?",
-          ne: "परीक्षण प्रश्न?"
+          en: "Are you eligible?",
+          ne: "के तपाईं योग्य हुनुहुन्छ?",
         },
         options: [
           {
             label: {
               en: "Yes",
-              ne: "हो"
+              ne: "हो",
             },
             value: "yes",
             resultsInEligible: true,
-            nextQuestionOrder: null
-          }
+            nextQuestionOrder: null,
+          },
         ],
-        isTerminal: true
+        isTerminal: true,
       });
 
     expect(response.status).toBe(403);
   });
-});
 
-it("should evaluate eligibility", async () => {
-  const response = await request(app)
-    .post("/api/services/6a8aa1d127d7f9db63cc3a94/eligibility/evaluate")
-    .send({
-  answers: [
-    {
-      questionOrder: 1,
-      value: "yes",
-    },
-    {
-      questionOrder: 2,
-      value: "yes",
-    },
-  ],
-});
+  it("should evaluate eligibility", async () => {
+    const service = await createTestService();
 
-  expect(response.status).toBe(200);
+    const admin = await createTestUser({
+      role: "admin",
+    });
 
-  expect(response.body.success).toBe(true);
+    const adminToken = await loginTestUser({
+      email: admin.email,
+      password: admin.password,
+    });
 
-  expect(response.body.data).toBeDefined();
+    const createResponse = await request(app)
+      .post(`/api/services/${service._id}/eligibility`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        order: 1,
+        questionText: {
+          en: "Are you eligible?",
+          ne: "के तपाईं योग्य हुनुहुन्छ?",
+        },
+        options: [
+          {
+            label: {
+              en: "Yes",
+              ne: "हो",
+            },
+            value: "yes",
+            resultsInEligible: true,
+            nextQuestionOrder: null,
+          },
+        ],
+        isTerminal: true,
+      });
+
+    expect(createResponse.status).toBe(201);
+
+    const response = await request(app)
+      .post(`/api/services/${service._id}/eligibility/evaluate`)
+      .send({
+        answers: [
+          {
+            questionOrder: 1,
+            value: "yes",
+          },
+        ],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toBeDefined();
+  });
 });

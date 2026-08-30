@@ -5,15 +5,15 @@ import { beforeAll, afterAll } from "vitest";
 dotenv.config();
 
 beforeAll(async () => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is not defined");
+  if (!process.env.MONGODB_TEST_URI) {
+    throw new Error("MONGODB_TEST_URI is not defined");
   }
 
-  await mongoose.connect(process.env.MONGODB_URI, {
+  await mongoose.connect(process.env.MONGODB_TEST_URI, {
     serverSelectionTimeoutMS: 10000,
   });
 
-  console.log("[test] MongoDB connected");
+  console.log("[test] Test MongoDB connected");
 });
 
 afterAll(async () => {

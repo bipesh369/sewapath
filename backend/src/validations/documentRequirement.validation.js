@@ -1,9 +1,6 @@
 import { z } from "zod";
-const createDocumentRequirementSchema = z.object({
-  serviceId: z
-    .string()
-    .min(1, "Service ID is required"),
 
+const createDocumentRequirementSchema = z.object({
   label: z.object({
     en: z
       .string()
@@ -16,14 +13,14 @@ const createDocumentRequirementSchema = z.object({
       .min(1, "Nepali label is required"),
   }),
 
-  mandatory: z
-    .boolean()
-    .optional(),
+  mandatory: z.boolean().optional(),
 
-  notes: z.object({
-    en: z.string().trim().optional(),
-    ne: z.string().trim().optional(),
-  }).optional(),
+  notes: z
+    .object({
+      en: z.string().trim().optional(),
+      ne: z.string().trim().optional(),
+    })
+    .optional(),
 
   order: z
     .number()
@@ -34,8 +31,7 @@ const createDocumentRequirementSchema = z.object({
 const updateDocumentRequirementSchema =
   createDocumentRequirementSchema.partial();
 
-
-  export default {
-    createDocumentRequirementSchema,
-    updateDocumentRequirementSchema,
-  }
+export default {
+  createDocumentRequirementSchema,
+  updateDocumentRequirementSchema,
+};
