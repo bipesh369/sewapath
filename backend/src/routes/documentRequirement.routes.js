@@ -23,20 +23,21 @@ router
   );
 
 // Update and delete a document requirement
-router
-  .route("/:id")
-  .patch(
-    protect,
-    authorize("admin"),
-    validate(
-      documentRequirementSchemas.updateDocumentRequirementSchema
-    ),
-    documentRequirementController.updateDocumentRequirement
-  )
-  .delete(
-    protect,
-    authorize("admin"),
-    documentRequirementController.deleteDocumentRequirement
-  );
+router.patch(
+  "/documents/:id",
+  protect,
+  authorize("admin"),
+  validate(
+    documentRequirementSchemas.updateDocumentRequirementSchema
+  ),
+  documentRequirementController.updateDocumentRequirement
+);
+
+router.delete(
+  "/documents/:id",
+  protect,
+  authorize("admin"),
+  documentRequirementController.deleteDocumentRequirement
+);
 
 export default router;

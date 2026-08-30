@@ -16,17 +16,11 @@ const savedServiceSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-savedServiceSchema.index(
-  { userId: 1, serviceId: 1 },
-  { unique: true }
-);
+savedServiceSchema.index({ userId: 1, serviceId: 1 }, { unique: true });
 
-const SavedService = mongoose.model(
-  "SavedService",
-  savedServiceSchema
-);
+const SavedService = mongoose.model("SavedService", savedServiceSchema);
 
 export default SavedService;
