@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
+
 import asyncHandler from "../utils/asyncHandler.js";
+
 import ApiError from "../utils/apiError.js";
 
 const protect = asyncHandler(async (req, res, next) => {
@@ -27,14 +29,12 @@ const protect = asyncHandler(async (req, res, next) => {
 
   req.user = user;
 
-console.log("AUTH USER:", {
-  id: user._id,
-  email: user.email,
-  role: user.role,
-  isActive: user.isActive,
-});
-
-next();
+  console.log("AUTH USER:", {
+    id: user._id,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+  });
 
   next();
 });

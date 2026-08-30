@@ -29,7 +29,7 @@ const createEligibilityQuestion = asyncHandler(async (req, res) => {
     isTerminal,
   });
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Eligibility question created successfully",
     data: question,
@@ -49,7 +49,7 @@ const getEligibilityQuestions = asyncHandler(async (req, res) => {
     serviceId,
   }).sort({ order: 1 });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Eligibility questions fetched successfully",
     data: questions,
