@@ -5,49 +5,39 @@ import DocumentRequirement from "../models/documentRequirement.model.js";
 
 // Get all published services
 const getServices = asyncHandler(async (req, res) => {
-  const { category, deliveryMode, q } = req.query;
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(
+    Math.max(Number(req.query.limit) || 10, 1),
+    50
+  );
+
+  const skip = (page - 1) * limit;
 
   const filter = {
     status: "published",
   };
 
-  if (category) {
-    filter.category = category;
-  }
+  const [services, total] = await Promise.all([
+    Service.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
 
-  if (deliveryMode) {
-    filter.deliveryMode = deliveryMode;
-  }
+    Service.countDocuments(filter),
+  ]);
 
-  if (q) {
-    filter.$or = [
-      {
-        title: {
-          $regex: q,
-          $options: "i",
-        },
-      },
-      {
-        description: {
-          $regex: q,
-          $options: "i",
-        },
-      },
-      {
-        slug: {
-          $regex: q,
-          $options: "i",
-        },
-      },
-    ];
-  }
-
-  const services = await Service.find(filter);
+  const totalPages = Math.ceil(total / limit);
 
   res.status(200).json({
     success: true,
     message: "Services fetched successfully",
     data: services,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
   });
 });
 
