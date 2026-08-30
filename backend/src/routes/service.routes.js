@@ -1,8 +1,10 @@
 import { Router } from "express";
+
 import serviceController from "../controllers/service.controller.js";
 import protect from "../middleware/auth.middleware.js";
 import authorize from "../middleware/authorize.middleware.js";
-
+import validate from "../utils/validation.js";
+import serviceSchemas from "../validations/service.validation.js";
 const router = Router();
 
 // Service collection
@@ -12,10 +14,12 @@ router
   .post(
     protect,
     authorize("admin"),
+    validate(serviceSchemas.createServiceSchema),
     serviceController.createService
   );
 
-  router.post("/match", serviceController.matchServices);
+// Match services
+router.post("/match", serviceController.matchServices);
 
 // Single service
 router
@@ -24,6 +28,7 @@ router
   .patch(
     protect,
     authorize("admin"),
+    validate(serviceSchemas.updateServiceSchema),
     serviceController.updateService
   )
   .delete(

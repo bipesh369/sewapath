@@ -27,6 +27,15 @@ const protect = asyncHandler(async (req, res, next) => {
 
   req.user = user;
 
+console.log("AUTH USER:", {
+  id: user._id,
+  email: user.email,
+  role: user.role,
+  isActive: user.isActive,
+});
+
+next();
+
   next();
 });
 
