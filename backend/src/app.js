@@ -37,10 +37,8 @@ app.use("/api", documentRequirementRoutes);
 app.use("/api", eligibilityQuestionRoutes);
 app.use("/api", journeyStepRoutes);
 app.use("/api/offices", officeRoutes);
-app.use("/api/documents", documentRequirementRoutes);
 app.use("/api/saved-services", savedServiceRoutes);
 app.use("/api/notifications", notificationRoutes);
-
 // Error handler must be last
 app.use(errorHandler);
 

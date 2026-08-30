@@ -5,6 +5,7 @@ import authorize from "../middleware/authorize.middleware.js";
 import validate from "../utils/validation.js";
 import registerSchem from "../validations/auth.validation.js";
 import loginSchema from "../validations/auth.validation.js"
+import authRateLimiter from "../middleware/rateLimit.middleware.js";
 
 
 const router = express.Router();
@@ -33,12 +34,14 @@ router.get(
 
 router.post(
   "/register",
+  authRateLimiter,
   validate(registerSchem.registerSchema),
   authController.registerUser
 );
 
 router.post(
   "/login",
+  authRateLimiter,
   validate(loginSchema.loginSchema),
   authController.loginUser
 );
