@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 
 import serviceRoutes from "./routes/service.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
@@ -12,6 +13,9 @@ import savedServiceRoutes from "./routes/savedService.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
+
+app.use(helmet());
+
 
 app.use(
   cors({
