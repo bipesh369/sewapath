@@ -69,6 +69,10 @@ const serviceSchema = new mongoose.Schema(
   }
 );
 
+serviceSchema.index({
+  status: 1,
+});
+
 const Service = mongoose.model("Service", serviceSchema);
 
 export default Service;

@@ -69,6 +69,11 @@ const eligibilityQuestionSchema = new mongoose.Schema(
   }
 );
 
+eligibilityQuestionSchema.index({
+  serviceId: 1,
+  order: 1,
+});
+
 const EligibilityQuestion = mongoose.model(
   "EligibilityQuestion",
   eligibilityQuestionSchema

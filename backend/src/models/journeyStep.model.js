@@ -61,6 +61,11 @@ const journeyStepSchema = new mongoose.Schema(
   }
 );
 
+journeyStepSchema.index({
+  serviceId: 1,
+  order: 1,
+});
+
 const JourneyStep = mongoose.model(
   "JourneyStep",
   journeyStepSchema

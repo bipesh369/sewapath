@@ -36,6 +36,12 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
+// Faster lookup for a user's newest notifications
+notificationSchema.index({
+  userId: 1,
+  createdAt: -1,
+});
+
 const Notification = mongoose.model(
   "Notification",
   notificationSchema

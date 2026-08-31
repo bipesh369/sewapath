@@ -47,6 +47,11 @@ const documentRequirementSchema = new mongoose.Schema(
   }
 );
 
+documentRequirementSchema.index({
+  serviceId: 1,
+  order: 1,
+});
+
 const DocumentRequirement = mongoose.model(
   "DocumentRequirement",
   documentRequirementSchema
