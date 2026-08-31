@@ -40,6 +40,12 @@ const errorHandler = (err, req, res, next) => {
   if (statusCode === 500 && process.env.NODE_ENV === "production") {
     message = "Internal Server Error";
   }
+  
+  // MongoDB duplicate key error
+if (err.code === 11000) {
+  statusCode = 409;
+  message = "A record with this value already exists";
+}
 
   return res.status(statusCode).json({
     success: false,

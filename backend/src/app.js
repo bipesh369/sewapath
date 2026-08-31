@@ -24,8 +24,8 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -43,6 +43,17 @@ app.use("/api", journeyStepRoutes);
 app.use("/api/offices", officeRoutes);
 app.use("/api/saved-services", savedServiceRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+// 404 handler
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+
 // Error handler must be last
 app.use(errorHandler);
 

@@ -98,4 +98,44 @@ describe("Saved Services API", () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
   });
+
+  it("should not allow a user to remove another user's saved service", async () => {
+  const service = await createTestService({
+    status: "published",
+  });
+
+  const userA = await createTestUser();
+  const userB = await createTestUser();
+
+  const tokenA = await loginTestUser({
+    email: userA.email,
+    password: userA.password,
+  });
+
+  const tokenB = await loginTestUser({
+    email: userB.email,
+    password: userB.password,
+  });
+
+  // User A saves the service
+  await request(app)
+    .post(`/api/saved-services/${service._id}`)
+    .set("Authorization", `Bearer ${tokenA}`);
+
+  // User B tries to remove User A's saved service
+  const response = await request(app)
+    .delete(`/api/saved-services/${service._id}`)
+    .set("Authorization", `Bearer ${tokenB}`);
+
+  expect(response.status).toBe(404);
+
+  // Confirm User A's saved service still exists
+  const savedServices = await request(app)
+    .get("/api/saved-services")
+    .set("Authorization", `Bearer ${tokenA}`);
+
+  expect(savedServices.status).toBe(200);
+  expect(savedServices.body.data.length).toBe(1);
+});
+
 });

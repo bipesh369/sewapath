@@ -1,5 +1,5 @@
 import "dotenv/config";
-
+import mongoose from "mongoose";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 
@@ -20,3 +20,14 @@ const startServer = async () => {
 };
 
 startServer();
+
+const shutdown = async (signal) => {
+  console.log(`[server] ${signal} received. Shutting down...`);
+
+  await mongoose.connection.close();
+
+  process.exit(0);
+};
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
