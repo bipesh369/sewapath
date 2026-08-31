@@ -1,7 +1,6 @@
 const errorHandler = (err, req, res, next) => {
   console.error(err);
 
-  // If response was already sent, let Express handle it
   if (res.headersSent) {
     return next(err);
   }
@@ -18,6 +17,28 @@ const errorHandler = (err, req, res, next) => {
     } else {
       message = "Validation failed";
     }
+  }
+
+  // Invalid MongoDB ObjectId
+  if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Invalid resource ID";
+  }
+
+  // JWT errors
+  if (err.name === "JsonWebTokenError") {
+    statusCode = 401;
+    message = "Invalid or expired token";
+  }
+
+  if (err.name === "TokenExpiredError") {
+    statusCode = 401;
+    message = "Token has expired";
+  }
+
+  // Hide unexpected internal errors in production
+  if (statusCode === 500 && process.env.NODE_ENV === "production") {
+    message = "Internal Server Error";
   }
 
   return res.status(statusCode).json({
