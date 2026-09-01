@@ -1,22 +1,42 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Eligibility from "./pages/Eligibility";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import Services from "./pages/Services";
 import ServiceDetails from "./pages/ServiceDetails";
+import Eligibility from "./pages/Eligibility";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/services" replace />} />
+        {/* Home */}
+        <Route
+          path="/"
+          element={<Navigate to="/services" replace />}
+        />
 
-        <Route path="/services" element={<Services />} />
+        {/* Services list */}
+        <Route
+          path="/services"
+          element={<Services />}
+        />
 
-        <Route path="/services/:id" element={<ServiceDetails />} />
+        {/* Service details */}
+        <Route
+          path="/services/:id"
+          element={<ServiceDetails />}
+        />
+
+        {/* Eligibility */}
+        <Route
+          path="/services/:id/eligibility"
+          element={<Eligibility />}
+        />
       </Routes>
-
-      <Route path="/services/:id/eligibility"
-         element={<Eligibility />}/>
     </BrowserRouter>
   );
 }
