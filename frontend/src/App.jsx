@@ -1,20 +1,24 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Eligibility from "./pages/Eligibility";
 
-import getServices from "./api/services.api";
 import Services from "./pages/Services";
+import ServiceDetails from "./pages/ServiceDetails";
 
 function App() {
-  useEffect(() => {
-    getServices()
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/services" replace />} />
 
-  return <Services />;
+        <Route path="/services" element={<Services />} />
+
+        <Route path="/services/:id" element={<ServiceDetails />} />
+      </Routes>
+
+      <Route path="/services/:id/eligibility"
+         element={<Eligibility />}/>
+    </BrowserRouter>
+  );
 }
 
 export default App;
