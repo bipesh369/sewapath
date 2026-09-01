@@ -1,25 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+
+import getServices from "./api/services.api";
+import Services from "./pages/Services";
 
 function App() {
-  const [message, setMessage] = useState("Loading...");
-
   useEffect(() => {
-    fetch("http://localhost:5000/api/message")
-      .then((response) => response.json())
+    getServices()
       .then((data) => {
-        setMessage(data.message);
+        console.log(data);
       })
       .catch((error) => {
         console.error(error);
-        setMessage("Backend connection failed");
       });
   }, []);
 
-  return (
-    <div>
-      <h1>{message}</h1>
-    </div>
-  );
+  return <Services />;
 }
 
 export default App;
