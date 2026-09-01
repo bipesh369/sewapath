@@ -94,40 +94,40 @@ describe("Service API", () => {
     expect(response.body.data.status).toBe("draft");
   });
 
- it("should return 409 when creating a service with a duplicate slug", async () => {
-  const admin = await createTestUser({
-    role: "admin",
+  it("should return 409 when creating a service with a duplicate slug", async () => {
+    const admin = await createTestUser({
+      role: "admin",
+    });
+
+    const adminToken = await loginTestUser({
+      email: admin.email,
+      password: admin.password,
+    });
+
+    const serviceData = {
+      title: "Test Service",
+      slug: `duplicate-service-${Date.now()}`,
+      description: "Test description",
+      category: "Test",
+      fee: 100,
+      processingTime: "7 days",
+      deliveryMode: "Online",
+    };
+
+    const first = await request(app)
+      .post("/api/services")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(serviceData);
+
+    expect(first.status).toBe(201);
+
+    const second = await request(app)
+      .post("/api/services")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(serviceData);
+
+    expect(second.status).toBe(409);
+    expect(second.body.success).toBe(false);
   });
-
-  const adminToken = await loginTestUser({
-    email: admin.email,
-    password: admin.password,
-  });
-
-  const serviceData = {
-    title: "Test Service",
-    slug: "duplicate-service",
-    description: "Test description",
-    category: "Test",
-    fee: 100,
-    processingTime: "7 days",
-    deliveryMode: "Online",
-  };
-
-  const first = await request(app)
-    .post("/api/services")
-    .set("Authorization", `Bearer ${adminToken}`)
-    .send(serviceData);
-
-  expect(first.status).toBe(201);
-
-  const second = await request(app)
-    .post("/api/services")
-    .set("Authorization", `Bearer ${adminToken}`)
-    .send(serviceData);
-
-  expect(second.status).toBe(409);
-  expect(second.body.success).toBe(false);
 });
 
-});

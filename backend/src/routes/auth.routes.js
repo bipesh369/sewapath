@@ -10,9 +10,19 @@ import authRateLimiter from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
-router.post("/register", authController.registerUser);
+router.post(
+  "/register",
+  authRateLimiter,
+  validate(registerSchem.registerSchema),
+  authController.registerUser
+);
 
-router.post("/login", authController.loginUser);
+router.post(
+  "/login",
+  authRateLimiter,
+  validate(loginSchema.loginSchema),
+  authController.loginUser
+);
 
 router.get("/me", protect, authController.getCurrentUser);
 
@@ -32,19 +42,6 @@ router.get(
   }
 );
 
-router.post(
-  "/register",
-  authRateLimiter,
-  validate(registerSchem.registerSchema),
-  authController.registerUser
-);
-
-router.post(
-  "/login",
-  authRateLimiter,
-  validate(loginSchema.loginSchema),
-  authController.loginUser
-);
 
 
 export default router;
