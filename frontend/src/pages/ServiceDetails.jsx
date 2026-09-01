@@ -96,6 +96,13 @@ function ServiceDetails() {
           >
             Check Eligibility
           </Link>
+
+          <Link
+            to={`/services/${service._id}/journey`}
+            className="mt-3 ml-3 inline-block rounded-lg border border-blue-600 px-5 py-3 font-medium text-blue-600 hover:bg-blue-50"
+          >
+            View Service Journey
+          </Link>
         </section>
 
         {/* Required documents */}
