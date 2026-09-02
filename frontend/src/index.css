@@ -1,6 +1,34 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand */
+  --color-primary: #a92543;
+  --color-primary-dark: #8f1f39;
+
+  /* Application */
+  --color-background: #f8f4ed;
+  --color-surface: #ffffff;
+  --color-sidebar: #243447;
+
+  /* Text */
+  --color-text-primary: #243447;
+  --color-text-secondary: #737b84;
+  --color-text-muted: #9299a1;
+
+  /* Borders */
+  --color-border: #e1dfda;
+
+  /* Status */
+  --color-success: #3f7d61;
+  --color-success-bg: #e7f0eb;
+
+  --color-warning: #b58a2a;
+  --color-warning-bg: #f8e9bd;
+
+  --color-danger: #b94b4b;
+  --color-danger-bg: #f7e4e3;
+
+  /* Typography */
   font-family:
     Inter,
     system-ui,
@@ -9,8 +37,8 @@
     "Segoe UI",
     sans-serif;
 
-  color: #172033;
-  background-color: #f8fafc;
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,7 +58,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
 }
 
 button,
@@ -54,6 +82,6 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
