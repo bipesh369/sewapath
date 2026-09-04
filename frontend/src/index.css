@@ -1,82 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans:wght@400;500;600;700&display=swap");
+
 @import "tailwindcss";
 
 @theme {
-  /* ---- Brand colors (from the SewaPath prototype) ---- */
-  --color-ink: #22303F;
-  --color-ink-light: #3C4E61;
-  --color-crimson: #A5243D;
-  --color-crimson-dark: #7E1B30;
-  --color-crimson-bg: #F7E4E7;
-  --color-marigold: #E0A438;
-  --color-marigold-light: #F6E3B8;
-  --color-paper: #FBF7F0;
-  --color-paper-dim: #F1E8D9;
-  --color-moss: #3B7A57;
-  --color-moss-bg: #E4F0E7;
-  --color-clay: #B23A34;
-  --color-clay-bg: #F7E5E3;
+  --color-crimson: #b4233c;
+  --color-crimson-bg: #fff1f3;
+  --color-marigold: #d99a24;
 
-  /* ---- Fonts ---- */
+  --color-paper: #f8f5ef;
+  --color-paper-dim: #f1ede5;
+
+  --color-white: #ffffff;
+
+  --color-ink: #22303f;
+  --color-ink-light: #405060;
+  --color-ink-60: rgba(34, 48, 63, 0.6);
+  --color-ink-15: rgba(34, 48, 63, 0.15);
+
   --font-display: "Baloo 2", sans-serif;
-  --font-sans: "Noto Sans", sans-serif;
+  --font-body: "Noto Sans", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
-
-  /* ---- Radius token used by Card / result cards ---- */
-  --radius-card: 12px;
 }
 
-@layer base {
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-  }
+:root {
+  --crimson: #b4233c;
+  --crimson-bg: #fff1f3;
+  --marigold: #d99a24;
 
-  body {
-    font-family: var(--font-sans);
-    background: var(--color-paper);
-    color: var(--color-ink);
-    -webkit-font-smoothing: antialiased;
-  }
+  --paper: #f8f5ef;
+  --paper-dim: #f1ede5;
 
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
+  --white: #ffffff;
 
-  button {
-    font-family: var(--font-sans);
-    cursor: pointer;
-  }
-
-  a {
-    color: inherit;
-  }
+  --ink: #22303f;
+  --ink-light: #405060;
+  --ink-60: rgba(34, 48, 63, 0.6);
+  --ink-15: rgba(34, 48, 63, 0.15);
 }
 
-@layer utilities {
-  .font-display {
-    font-family: var(--font-display);
-  }
-  .font-mono {
-    font-family: var(--font-mono);
-  }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Noto Sans", sans-serif;
 }
 
-/* Dotted "trail" segment used by PathRail — kept as a plain class since the
-   background-image gradient trick isn't expressible as Tailwind utilities. */
-.rail-seg {
-  background-image: linear-gradient(
-    to right,
-    rgba(34, 48, 63, 0.14) 50%,
-    transparent 0%
-  );
-  background-size: 6px 2px;
-  background-repeat: repeat-x;
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Baloo 2", sans-serif;
 }
-.rail-seg.done {
-  background-image: linear-gradient(to right, #3B7A57 50%, transparent 0%);
+
+.font-display {
+  font-family: "Baloo 2", sans-serif;
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", monospace;
 }

@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
+
 import getServices, { matchServices } from "../api/services.api";
 
 function initials(title = "") {
@@ -7,245 +12,510 @@ function initials(title = "") {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 3)
-    .map((w) => w[0])
+    .map((word) => word[0])
     .join("")
     .toUpperCase();
 }
 
-const JURISDICTIONS = ["Federal office", "Provincial office", "Ward / local office"];
-
 function Services() {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
   const q = searchParams.get("q") || "";
 
+  // Result passed from Home → Describe your goal
+  const goal = location.state?.goal || "";
+  const matchedServices = location.state?.matchedServices;
+
   const [allServices, setAllServices] = useState([]);
-  const [matches, setMatches] = useState(null); // [{service, score}] when a search term is active
+  const [matches, setMatches] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [modeFilter, setModeFilter] = useState({ online: true, office: true });
-  const [jurisdiction, setJurisdiction] = useState(JURISDICTIONS[0]);
   const [inputValue, setInputValue] = useState(q);
 
   useEffect(() => {
-    setLoading(true);
-    setError("");
-
-    if (q) {
-      matchServices(q)
-        .then((res) => setMatches(res.data))
-        .catch((err) =>
-          setError(err.response?.data?.message || "Failed to match services")
-        )
-        .finally(() => setLoading(false));
-    } else {
-      setMatches(null);
-      getServices(1, 50)
-        .then((res) => setAllServices(res.data))
-        .catch((err) =>
-          setError(err.response?.data?.message || "Failed to load services")
-        )
-        .finally(() => setLoading(false));
-    }
+    setInputValue(q);
   }, [q]);
 
-  const baseList = useMemo(
-    () => (matches ? matches.map((m) => ({ ...m.service, _score: m.score })) : allServices),
-    [matches, allServices]
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadServices = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        /*
+         * Home already called /services/match.
+         * Use the result passed through router state.
+         */
+        if (matchedServices && !q) {
+          if (!cancelled) {
+            setMatches(matchedServices);
+            setAllServices([]);
+          }
+
+          return;
+        }
+
+        /*
+         * Search:
+         * /services?q=passport
+         */
+        if (q) {
+          const response = await matchServices(q);
+
+          if (!cancelled) {
+            setMatches(response.data || []);
+            setAllServices([]);
+          }
+
+          return;
+        }
+
+        /*
+         * All services:
+         * /services
+         */
+        const response = await getServices(1, 50);
+
+        if (!cancelled) {
+          setMatches(null);
+          setAllServices(response.data || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err.response?.data?.message ||
+              "Failed to load services."
+          );
+
+          setMatches(null);
+          setAllServices([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [q, matchedServices]);
+
+  /*
+   * Convert match response:
+   *
+   * {
+   *   service: {...},
+   *   score: 2
+   * }
+   *
+   * into a normal service object.
+   */
+  const services = useMemo(() => {
+    if (matches) {
+      return matches
+        .map((item) => {
+          if (item?.service) {
+            return {
+              ...item.service,
+              _score: item.score,
+            };
+          }
+
+          return item;
+        })
+        .filter(Boolean);
+    }
+
+    return allServices;
+  }, [matches, allServices]);
 
   const categories = useMemo(() => {
-    const set = new Set(baseList.map((s) => s.category).filter(Boolean));
-    return Array.from(set);
-  }, [baseList]);
+    return [
+      ...new Set(
+        services
+          .map((service) => service.category)
+          .filter(Boolean)
+      ),
+    ];
+  }, [services]);
 
-  const toggleCategory = (cat) =>
-    setSelectedCategories((list) =>
-      list.includes(cat) ? list.filter((c) => c !== cat) : [...list, cat]
+  const [selectedCategory, setSelectedCategory] =
+    useState("all");
+
+  const filteredServices = useMemo(() => {
+    if (selectedCategory === "all") {
+      return services;
+    }
+
+    return services.filter(
+      (service) => service.category === selectedCategory
     );
-
-  const results = useMemo(() => {
-    let list = baseList;
-
-    if (selectedCategories.length > 0) {
-      list = list.filter((s) => selectedCategories.includes(s.category));
-    }
-
-    list = list.filter((s) => {
-      const mode = (s.deliveryMode || "").toLowerCase();
-      const isOnline = mode.includes("online");
-      const isOffice =
-        mode.includes("office") || mode.includes("in-person") || mode.includes("person");
-      if (isOnline && !modeFilter.online && !isOffice) return false;
-      if (isOffice && !modeFilter.office && !isOnline) return false;
-      return true;
-    });
-
-    if (matches) {
-      list = [...list].sort((a, b) => (b._score ?? 0) - (a._score ?? 0));
-    }
-
-    return list;
-  }, [baseList, selectedCategories, modeFilter, matches]);
-
-  const headline = q
-    ? `${results.length} services match "${q}"`
-    : `${results.length} services available`;
+  }, [services, selectedCategory]);
 
   const submitSearch = (e) => {
     e.preventDefault();
-    setSearchParams(inputValue.trim() ? { q: inputValue.trim() } : {});
+
+    const value = inputValue.trim();
+
+    if (value) {
+      setSearchParams({ q: value });
+    } else {
+      setSearchParams({});
+    }
   };
 
+  const clearSearch = () => {
+    setInputValue("");
+    setSearchParams({});
+  };
+
+  const isGoalResult =
+    Boolean(goal && !q && matchedServices);
+
   return (
-    <div>
-      <div className="flex flex-col items-center gap-3 border-b border-ink/15 px-6 py-4 md:flex-row md:justify-center md:gap-6 md:px-12">
-        <form onSubmit={submitSearch} className="flex w-full max-w-560px gap-2">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder='"renew my passport" or "citizenship certificate"'
-            className="flex-1 rounded-[9px] border-[1.5px] border-ink/15 px-4 py-2.5 text-sm outline-none focus:border-crimson"
-          />
-          <button type="submit" className="rounded-[9px] bg-ink px-5 text-[13px] font-semibold text-paper">
-            Search
-          </button>
-        </form>
-      </div>
+    <main className="min-h-screen">
 
-      <div className="mx-auto grid max-w-1180px grid-cols-1 gap-8 px-6 py-8 md:grid-cols-[220px_1fr] md:px-12">
-        <aside className="border-ink/15 pr-0 md:border-r md:pr-8">
-          <h3 className="mt-0 mb-3 text-[11.5px] font-bold tracking-[0.08em] text-ink/60 uppercase">
-            Category
-          </h3>
-          {categories.length === 0 && (
-            <p className="text-[12.5px] text-ink/50">No categories yet</p>
-          )}
-          {categories.map((cat) => (
-            <label key={cat} className="mb-2.5 flex items-center gap-2 text-sm text-ink-light">
-              <input
-                type="checkbox"
-                checked={selectedCategories.includes(cat)}
-                onChange={() => toggleCategory(cat)}
-                className="accent-crimson"
-              />
-              {cat}
-            </label>
-          ))}
+      {/* HEADER */}
+      <section className="border-b border-ink/15">
+        <div className="mx-auto max-w-[1180px] px-6 pb-[30px] pt-[42px] md:px-12">
 
-          <h3 className="mt-22px mb-3 text-[11.5px] font-bold tracking-[0.08em] text-ink/60 uppercase">
-            Delivery mode
-          </h3>
-          <label className="mb-2.5 flex items-center gap-2 text-sm text-ink-light">
-            <input
-              type="checkbox"
-              checked={modeFilter.online}
-              onChange={() => setModeFilter((m) => ({ ...m, online: !m.online }))}
-              className="accent-crimson"
-            />
-            Online (Nagarik App / portal)
-          </label>
-          <label className="mb-2.5 flex items-center gap-2 text-sm text-ink-light">
-            <input
-              type="checkbox"
-              checked={modeFilter.office}
-              onChange={() => setModeFilter((m) => ({ ...m, office: !m.office }))}
-              className="accent-crimson"
-            />
-            Physical office visit
-          </label>
+          <div className="max-w-[760px]">
 
-          <h3 className="mt-22px mb-3 text-[11.5px] font-bold tracking-[0.08em] text-ink/60 uppercase">
-            Jurisdiction
-          </h3>
-          {JURISDICTIONS.map((j) => (
-            <label key={j} className="mb-2.5 flex items-center gap-2 text-sm text-ink-light">
-              <input
-                type="radio"
-                name="jurisdiction"
-                checked={jurisdiction === j}
-                onChange={() => setJurisdiction(j)}
-                className="accent-crimson"
-              />
-              {j}
-            </label>
-          ))}
-        </aside>
+            <div className="mb-[11px] font-mono text-[11px] uppercase tracking-[0.1em] text-crimson">
+              {isGoalResult
+                ? "Your results"
+                : "Service directory"}
+            </div>
 
-        <div className="md:pl-8">
-          <div className="mb-18px flex items-baseline justify-between">
-            <h2 className="text-[19px]">{loading ? "Searching…" : headline}</h2>
-            {matches && (
-              <span className="font-mono text-[12.5px] text-ink/60">SORTED BY MATCH %</span>
+            <h1 className="mb-[18px] text-[36px] font-bold leading-tight md:text-[48px]">
+              {isGoalResult
+                ? "Services that match your goal"
+                : "Find a government service"}
+            </h1>
+
+            {isGoalResult ? (
+              <div className="rounded-xl border border-crimson/20 bg-crimson-bg px-5 py-4">
+
+                <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-crimson">
+                  You told us
+                </div>
+
+                <p className="text-[15px] leading-6 text-ink">
+                  “{goal}”
+                </p>
+
+              </div>
+            ) : (
+              <p className="text-[15px] leading-6 text-ink-light">
+                Search by service name or describe what you
+                need. We’ll help you find the right government
+                service.
+              </p>
             )}
           </div>
 
-          {error && <p className="text-clay">{error}</p>}
+          {/* SEARCH */}
+          <form
+            onSubmit={submitSearch}
+            className="mt-[22px] max-w-[760px]"
+          >
+            <div className="flex overflow-hidden rounded-xl border border-ink/20 bg-white shadow-sm focus-within:border-crimson">
 
-          {!loading && results.length === 0 && !error && (
-            <p className="text-ink/60">No services matched. Try a different search term.</p>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) =>
+                  setInputValue(e.target.value)
+                }
+                placeholder="Search services..."
+                className="min-w-0 flex-1 bg-transparent px-5 py-3.5 text-[14px] outline-none placeholder:text-ink/40"
+              />
+
+              {inputValue && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="px-3 text-sm text-ink/40 hover:text-ink"
+                >
+                  ×
+                </button>
+              )}
+
+              <button
+                type="submit"
+                className="m-1 rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+              >
+                Search
+              </button>
+
+            </div>
+          </form>
+
+        </div>
+      </section>
+
+      {/* SERVICE DIRECTORY */}
+      <section>
+        <div className="mx-auto max-w-[1180px] px-6 py-[30px] md:px-12">
+
+          {/* FILTERS */}
+          {!loading &&
+            !error &&
+            services.length > 0 && (
+              <div className="mb-[22px] flex flex-wrap items-center gap-2">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedCategory("all")
+                  }
+                  className={`rounded-full border px-4 py-2 text-[12px] font-medium transition ${
+                    selectedCategory === "all"
+                      ? "border-crimson bg-crimson text-white"
+                      : "border-ink/15 bg-white text-ink-light hover:border-crimson/40"
+                  }`}
+                >
+                  All services
+                </button>
+
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() =>
+                      setSelectedCategory(category)
+                    }
+                    className={`rounded-full border px-4 py-2 text-[12px] font-medium transition ${
+                      selectedCategory === category
+                        ? "border-crimson bg-crimson text-white"
+                        : "border-ink/15 bg-white text-ink-light hover:border-crimson/40"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+
+              </div>
+            )}
+
+          {/* RESULT COUNT */}
+          {!loading && !error && (
+            <div className="mb-[18px] flex items-center justify-between">
+
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink/50">
+                  {filteredServices.length}{" "}
+                  {filteredServices.length === 1
+                    ? "service"
+                    : "services"}
+                </span>
+
+                {q && (
+                  <span className="ml-2 text-sm text-ink-light">
+                    matching “{q}”
+                  </span>
+                )}
+              </div>
+
+              {(q || isGoalResult) && (
+                <Link
+                  to="/services"
+                  className="text-sm font-semibold text-crimson hover:underline"
+                >
+                  View all
+                </Link>
+              )}
+
+            </div>
           )}
 
-          <div className="flex flex-col gap-13px">
-            {results.map((service) => {
-              const mode = (service.deliveryMode || "").toLowerCase();
-              const isOffice =
-                mode.includes("office") || mode.includes("in-person") || mode.includes("person");
-              const matchPct =
-                matches && service._score != null
-                  ? Math.max(35, Math.min(99, 50 + service._score * 12))
-                  : null;
+          {/* LOADING */}
+          {loading && (
+            <div className="grid gap-4 md:grid-cols-2">
 
-              return (
-                <Link
-                  key={service._id}
-                  to={`/services/${service._id}`}
-                  className="flex cursor-pointer gap-18px rounded-xl border-[1.5px] border-ink/15 bg-white p-5 no-underline transition-colors hover:border-ink/40"
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="animate-pulse rounded-xl border border-ink/10 bg-white p-[22px]"
                 >
-                  <div className="flex h-42px w-42px shrink-0 items-center justify-center rounded-[9px] bg-ink font-display text-[16px] font-bold text-marigold-light">
-                    {initials(service.title)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="mb-1 text-base">{service.title}</h3>
-                        <div className="mb-7px font-mono text-[12.5px] text-ink/60">
-                          {service.category || "Government service"}
-                        </div>
+                  <div className="mb-4 h-[42px] w-[42px] rounded-lg bg-paper-dim" />
+
+                  <div className="mb-3 h-5 w-2/3 rounded bg-paper-dim" />
+
+                  <div className="h-4 w-full rounded bg-paper-dim" />
+
+                  <div className="mt-2 h-4 w-4/5 rounded bg-paper-dim" />
+
+                  <div className="mt-5 h-3 w-1/2 rounded bg-paper-dim" />
+                </div>
+              ))}
+
+            </div>
+          )}
+
+          {/* ERROR */}
+          {!loading && error && (
+            <div className="rounded-xl border border-crimson/20 bg-crimson-bg p-[22px]">
+
+              <h2 className="mb-2 text-lg font-bold text-crimson">
+                Something went wrong
+              </h2>
+
+              <p className="text-sm text-ink-light">
+                {error}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-4 rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-white"
+              >
+                Try again
+              </button>
+
+            </div>
+          )}
+
+          {/* EMPTY */}
+          {!loading &&
+            !error &&
+            filteredServices.length === 0 && (
+              <div className="rounded-xl border border-ink/15 bg-white px-6 py-[50px] text-center">
+
+                <div className="mb-3 text-3xl">
+                  🔎
+                </div>
+
+                <h2 className="mb-2 text-xl font-bold">
+                  No services found
+                </h2>
+
+                <p className="mx-auto max-w-[500px] text-sm leading-6 text-ink-light">
+                  We couldn't find a matching government
+                  service. Try using different words or browse
+                  all available services.
+                </p>
+
+                <Link
+                  to="/services"
+                  className="mt-5 inline-block rounded-lg bg-crimson px-5 py-3 text-sm font-semibold text-white"
+                >
+                  Browse all services
+                </Link>
+
+              </div>
+            )}
+
+          {/* SERVICE CARDS */}
+          {!loading &&
+            !error &&
+            filteredServices.length > 0 && (
+              <div className="grid gap-4 md:grid-cols-2">
+
+                {filteredServices.map((service) => (
+                  <Link
+                    key={service._id}
+                    to={`/services/${service._id}`}
+                    className="group rounded-xl border border-ink/15 bg-white p-[22px] transition hover:-translate-y-0.5 hover:border-crimson/40 hover:shadow-sm"
+                  >
+
+                    {/* TOP */}
+                    <div className="flex items-start justify-between gap-4">
+
+                      <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-crimson-bg font-mono text-[12px] font-semibold text-crimson">
+                        {initials(service.title)}
                       </div>
-                      {matchPct && (
-                        <span className="shrink-0 whitespace-nowrap rounded-[20px] bg-moss-bg px-3 py-1.5 font-mono text-xs font-semibold text-moss">
-                          {matchPct}% match
+
+                      {service._score !== undefined && (
+                        <span className="font-mono text-[10px] text-ink/40">
+                          Match {service._score}
                         </span>
                       )}
+
                     </div>
-                    <p className="mb-11px max-w-500px text-[13.5px] leading-[1.55] text-ink-light">
+
+                    {/* TITLE */}
+                    <h2 className="mt-[18px] mb-2 text-[19px] font-bold leading-snug group-hover:text-crimson">
+                      {service.title}
+                    </h2>
+
+                    {/* DESCRIPTION */}
+                    <p className="mb-4 line-clamp-3 text-[13px] leading-5 text-ink-light">
                       {service.description}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span
-                        className={`rounded-xl px-2.5 py-1 text-[11.5px] ${
-                          isOffice
-                            ? "bg-crimson-bg font-semibold text-crimson-dark"
-                            : "bg-moss-bg font-semibold text-moss"
-                        }`}
-                      >
-                        {isOffice ? "🏢 Office visit required" : "🖥 Apply online"}
-                      </span>
-                      <span className="rounded-xl bg-paper-dim px-2.5 py-1 text-[11.5px] text-ink/60">
-                        {service.processingTime}
-                      </span>
+
+                    {/* CATEGORY */}
+                    {service.category && (
+                      <div className="mb-4">
+                        <span className="rounded-full bg-paper-dim px-3 py-1 font-mono text-[10px] uppercase tracking-[0.05em] text-ink/60">
+                          {service.category}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* SERVICE INFO */}
+                    <div className="grid grid-cols-2 gap-3 border-t border-ink/10 pt-4">
+
+                      <div>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink/40">
+                          Fee
+                        </div>
+
+                        <div className="mt-1 text-[12px] font-semibold text-ink">
+                          {service.fee === 0
+                            ? "Free"
+                            : `Rs. ${service.fee}`}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink/40">
+                          Processing
+                        </div>
+
+                        <div className="mt-1 text-[12px] font-semibold text-ink">
+                          {service.processingTime ||
+                            "—"}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink/40">
+                          Delivery
+                        </div>
+
+                        <div className="mt-1 text-[12px] font-semibold text-ink">
+                          {service.deliveryMode ||
+                            "—"}
+                        </div>
+                      </div>
+
+                      <div className="flex items-end justify-end">
+                        <span className="text-sm font-semibold text-crimson">
+                          View details →
+                        </span>
+                      </div>
+
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+
+                  </Link>
+                ))}
+
+              </div>
+            )}
+
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 
